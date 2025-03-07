@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib.animation as animation 
+from matplotlib.animation import PillowWriter 
 
 def main():
     class Wave:
@@ -85,12 +86,13 @@ def main():
             self.line.set_ydata(self.u)
             return self.line,
 
-        def simulation(self, speed=50):
-            ani = animation.FuncAnimation(self.fig, self.equation, frames=self.Nt, interval=speed, blit=True)
+        def simulation(self, speed=120):
+            ani = animation.FuncAnimation(self.fig, self.equation, frames=100, interval=15, blit=True)
+            ani.save('wave_simulation.gif', writer=PillowWriter(fps=30))
             plt.show()
 
     wave_simulation = Wave()
-    wave_simulation.simulation(speed=50)
+    wave_simulation.simulation(speed=120)
 
 if __name__ == '__main__':
     main()
