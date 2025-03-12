@@ -20,20 +20,12 @@ def main():
                 print('Estabilidad garantizada')
 
             # Condición inicial: Onda gaussiana
-            x = np.linspace(0, L, Nx)  
-            x0 = L / 3  
-            sigma = L / 10  
-            self.u = np.exp(-((x - x0) ** 2) / (2 * sigma ** 2))  
-
-            # Inicialización correcta de `u_prev` para que la onda se mueva
-            self.u_prev = np.copy(self.u)
-            self.u_prev[1:-1] = self.u[1:-1] - 0.5 * self.s**2 * (self.u[2:] - 2*self.u[1:-1] + self.u[:-2])
-
-            self.u_next = np.copy(self.u)
+            self.x = np.linspace(0, L, Nx)  
+            self.set_initial_conditions()
 
             #Funcion de profundidad del oceano
 
-            self.depth = self.compute_depth(x)
+            self.depth = self.compute_depth(self.x)
 
 
             self.damping_zone = np.ones(Nx)
@@ -45,13 +37,30 @@ def main():
             self.fig, self.ax = plt.subplots()
             self.ax.set_xlim(0, L)
             self.ax.set_ylim(-1, 1)
-            self.line, = self.ax.plot(x, self.u, lw=2)
+            self.line, = self.ax.plot(self.x, self.u, lw=2)
+
+        def set_initial_conditions(self):
+            x0 = self.L/3
+            sigma = self.L/10
+            self.u = np.exp(-((self.x - x0)**2)/(2*sigma**2))
+            self.u_prev = np.copy(self.u)
+            self.u_prev[1:-1] = self.u[1:-1] - 0.5 * self.s**2 * (self.u[2:] - 2*self.u[1:-1] + self.u[:-2])
+            self.u_next = np.copy(self.u)
 
         def compute_depth(self, x):
             max_depth = 100
             min_depth = 10
-            depth = max_depth - (max_depth - min_depth) * np.sin(np.pi *x / self.L)
-            return depth 
+            coast_start = np.random.uniform(self.L *0.6, self.L * 0.8)
+            depth = np.full_like(x,min_depth)
+
+            deep_region = x < coast_start
+            depth[deep_region] = max_depth
+
+            #costa 
+            slope_region = x >= coast_start
+            depth[slope_region] = depth[slope_region] = min_depth + (max_depth - min_depth) * ((x[slope_region] - coast_start) / (self.L - coast_start))
+
+            return depth
 
         def equation(self, frame):
             """ Actualiza la onda usando diferencias finitas """
@@ -82,17 +91,20 @@ def main():
             self.u_prev[:] = self.u  
             self.u[:] = self.u_next  
 
+            if np.max(self.u) < 0.01:
+                self.set_initial_conditions()
+
             # Actualizar la animación
             self.line.set_ydata(self.u)
             return self.line,
 
-        def simulation(self, speed=120):
+        def simulation(self, speed=20):
             ani = animation.FuncAnimation(self.fig, self.equation, frames=100, interval=15, blit=True)
-            ani.save('wave_simulation.gif', writer=PillowWriter(fps=30))
+            #ani.save('wave_simulation.gif', writer=PillowWriter(fps=30))
             plt.show()
 
     wave_simulation = Wave()
-    wave_simulation.simulation(speed=120)
+    wave_simulation.simulation(speed=20)
 
 if __name__ == '__main__':
     main()
