@@ -6,7 +6,7 @@ from matplotlib.animation import PillowWriter
 
 def main():
     class Wave:
-        def __init__(self, L=10, Nx=100, c=1, dt=0.01, Nt=200, damping_width=20):
+        def __init__(self, L=100, Nx=100, c=1, dt=0.01, Nt=200, damping_width=20):
             self.L = L  
             self.Nx = Nx  
             self.c = c  
@@ -36,11 +36,11 @@ def main():
             self.damping_zone = np.ones(Nx)
             d = damping_width
             for i in range(Nx-d,Nx):
-                self.damping_zone[i] = np.exp(-3*((i - (Nx - d))/d)**2)
+                self.damping_zone[i] = np.exp(-1.5*((i - (Nx - d))/d)**2)
 
             # Gráfico
             self.fig, self.ax = plt.subplots()
-            self.ax.set_xlim(0, L+5)
+            self.ax.set_xlim(0, L)
             self.ax.set_ylim(-1, 1)
             self.line, = self.ax.plot(self.x, self.u, lw=2)
 
@@ -129,7 +129,7 @@ def main():
 
             #guardamos los resultados
 
-            if np.max(self.u) < 0.01:
+            if np.max(self.u) < 0.1:
                 self.save_results()
                 self.set_initial_conditions()
 
@@ -138,10 +138,14 @@ def main():
             return self.line,
 
         def get_wave_end(self):
+            #print('Valores al final', self.u)
             idx = np.where(self.u > 0.01)[0]
             if len(idx) > 0:
                 return self.x[idx[-1]]
             return 0
+                    
+                
+
 
         def save_results(self):
             wave_end = self.get_wave_end()
